@@ -6,8 +6,6 @@ var FRICTION = 0.1;
 
 //Missles
 var m = [];
-
-
 //Launchers
 var l = [];
 
@@ -16,15 +14,19 @@ function setup() {
   p = createSprite(width / 2, height / 2, 50, 50);
   p.maxSpeed = MAX_SPEED;
   p.friction = FRICTION;
+  p.visible = false;
   //Missle Variables
   //Launcher Variables
-  l[0] = createSprite(random(0, width), random(0, height), 60, 60);
-  m[0] = new Missile(0);
+  for (let i=0;i<3;i++)
+  {
+    l[i] = new Launcher(i);
+    m[i] = new Missile(i);
+  }
 }
 
 function draw() {
-  background(0);
-  fill(255);
+  background(255);
+  noStroke();
   //Player Movement
   if (keyDown("w")) {
     //p.velocity.y = -5;
@@ -62,15 +64,41 @@ function draw() {
   //Missle Movement
   if (m.length > 0) 
   {
-    m[0].render();
-    m[0].move();
-    //m[0].collision();
-    m[0].update();
+    for (let i=0;i<m.length;i++)
+    {
+      if (typeof m[i] != "string")
+      {
+        m[i].render();
+        m[i].move();
+        m[i].update();
+      }
+      else
+      {
+        if (typeof l[i] != "string")
+        {
+          m[i] = new Missile(i);
+          console.log("RESUP")
+        }
+        
+      }
+    }
+  }
+
+  if (l.length > 0) 
+  {
+    for (let i=0;i<l.length;i++)
+    {
+      if (typeof l[i] != "string")
+      {
+        l[i].render();
+      }
+    }
   }
 
   
 
   drawSprites();
+  fill(58,189,242);
   ellipse(p.position.x, p.position.y, 50, 50);
 
   
@@ -78,35 +106,3 @@ function draw() {
 
 
 
-/*
-//Sprite creation
-//Click to create a new sprite with random speed
-
-function setup() {
-    createCanvas(800, 400);
-  }
-
-  function draw() {
-    background(255, 255, 255);
-
-    fill(0);
-    textAlign(CENTER);
-    text('Click to create a new sprite', width/2, height/2);
-    //draw all the sprites added to the sketch so far
-    //the positions will be updated automatically at every cycle
-    drawSprites();
-  }
-
-  function mousePressed() {
-
-    //create a sprite at the mouse position and store it in a temporary variable
-    var s = createSprite(mouseX, mouseY, 30, 30);
-    //if no image or animation is associated it will be a rectancle of the specified size
-    //and a random color
-
-    //now you can use the variable to set properties
-    //e.g. a random velocity on the x and y coordinates
-    s.velocity.x = random(-5, 5);
-    s.velocity.y = random(-5, 5);
-  }
-  */
