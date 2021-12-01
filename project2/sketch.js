@@ -91,17 +91,26 @@ function drawLevel(level)
     let posX = levels[level][i][1];
     let posY = levels[level][i][2];
     let head = levels[level][i][3];
-    if (levels[level][i][0] == 0)
-    {
-      l[i] = new Launcher(i,posX,posY,head);
-      m[i] = new Missile(i);
-    }
+    let type = levels[level][i][0]
+    //if (levels[level][i][0] == 0)
+    //{
+    l[i] = new Launcher(i,posX,posY,head,type);
+    m[i] = new Missile(i);
+    //}
   }
+}
+
+function getOutline(r,g,b)
+{
+  let res = color(r-40,g-40,b-40);
+  //console.log(res);
+  return res;
+  //return 0;
 }
 
 function draw() {
   background(255);
-  noStroke();
+  strokeWeight(5);
 
   //Draw Level
   /*
@@ -191,6 +200,7 @@ function draw() {
 
   drawSprites();
   fill(58,189,242);
+  stroke(getOutline(58,189,242));
   ellipse(p.position.x, p.position.y, 50, 50);
 
   //Level Changer

@@ -12,6 +12,8 @@ class Missile
         this.launched = false;
         //this.sprite.visible = false;
         this.color = l[this.id].color;
+        this.outline = l[this.id].outline;
+        
         this.a = 0;
         //this.sprite.life = random(500,750); //Life System
     }
@@ -20,6 +22,7 @@ class Missile
         if (this.sprite.removed == false)
         {
             fill(this.color);
+            stroke(this.outline);
             push()
             translate(this.sprite.position.x, this.sprite.position.y);
             /* Life System Shake
