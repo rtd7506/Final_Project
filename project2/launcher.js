@@ -4,13 +4,13 @@ class Launcher
     {
         this.id = id_;
         this.h = h_init;
-        this.sprite = createSprite(x_init, y_init, 60, 60);
+        this.sprite = createSprite(x_init, y_init, 90, 90);
         this.sprite.visible = false;
         this.color = color(224,102,102);
         this.outline = color(getOutline(224,102,102));
         this.sprite.rotation = h_init;
         this.type = type_;
-        console.log(type_);
+        //console.log(type_);
         this.aiming = false; //Does it Aim?
         this.moving = false; //Does it Move?
         this.mtype = 0; //Missle Type
@@ -47,6 +47,7 @@ class Launcher
     {
         if (this.sprite.removed == false)
         {
+            p.collide(this.sprite);
             push();
             rectMode(CENTER);
             translate(this.sprite.position.x,this.sprite.position.y)
@@ -61,7 +62,7 @@ class Launcher
             {
                 ellipse(0,0,30,30);
                 this.sprite.rotation = degrees(Math.atan2(p.position.y - this.sprite.position.y, p.position.x - this.sprite.position.x));
-                console.log(degrees(Math.atan2(p.position.y - this.sprite.position.y, p.position.x - this.sprite.position.x)));
+                //console.log(degrees(Math.atan2(p.position.y - this.sprite.position.y, p.position.x - this.sprite.position.x)));
             }
             pop();
             

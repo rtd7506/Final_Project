@@ -10,9 +10,13 @@ class Missile
         this.sprite.position.y = l[this.id].sprite.position.y;
         this.sprite.setSpeed(2,l[this.id].sprite.rotation);
         this.launched = false;
-        //this.sprite.visible = false;
-        this.color = l[this.id].color;
-        this.outline = l[this.id].outline;
+        this.sprite.visible = false;
+        this.color = color(235,203,36);//l[this.id].color;
+        this.outline = color(getOutline(235,203,36));//l[this.id].outline;
+        this.spurt = l[this.id].mtype == 1;
+        this.sMove = false;
+        this.sTimer = 0;
+        //console.log(this.spurt);
         
         this.a = 0;
         //this.sprite.life = random(500,750); //Life System
@@ -37,22 +41,55 @@ class Missile
             }
             */
             rotate(this.sprite.velocity.heading());
-
-            triangle(20, 0, -20, 20, -20, -20);
+            if (this.spurt == true)
+            {
+                triangle(5, 0, -15, 10, -15, -10);
+                triangle(15, 0, -5, 10, -5, -10);
+            }
+            else
+            {
+                triangle(15, 0, -15, 15, -15, -15);
+            }
+            
             pop()
         } 
-        else
-        {
-
-        }
     }
     move()
     {
+        if (this.spurt == true)
+        {
+            this.sTimer += 1;
+            if (this.sTimer > 20)
+            {
+                this.sMove = true; 
+                if (this.sTimer > 80)
+                {
+                    this.sTimer = 0;
+                }
+            }
+            else if (this.sTimer < 40)
+            {
+                this.sMove = false;
+            }
+        }
+
         this.sprite.acceleration = p5.Vector.sub(p.position, this.sprite.position);
         this.sprite.acceleration.setMag(.05);
-        this.sprite.velocity.add(this.sprite.acceleration);
-        this.sprite.velocity.limit(this.sprite.topspeed);
-        this.sprite.position.add(this.sprite.velocity);
+        if (this.spurt == true)
+        {
+            if (this.sMove == true)
+            {
+                this.sprite.velocity.add(this.sprite.acceleration);
+                this.sprite.velocity.limit(this.sprite.topspeed);
+                this.sprite.position.add(this.sprite.velocity);
+            }
+        }
+        else
+        {
+            this.sprite.velocity.add(this.sprite.acceleration);
+            this.sprite.velocity.limit(this.sprite.topspeed);
+            this.sprite.position.add(this.sprite.velocity);
+        }
         this.sprite.rotate = this.sprite.rotation;
 
         /* Tested new movement script
@@ -78,11 +115,12 @@ class Missile
                     
                     if (this.sprite.overlap(l[i].sprite)) 
                     {
-                        console.log("COLLISION");
+                        //console.log("COLLISION");
 
                         this.sprite.remove();
                         l[i].sprite.remove();
                         l.splice(i, 1, "None");
+                        //s_explode.play();
                         
                     }
                     /* Life System Test
@@ -107,11 +145,12 @@ class Missile
                     
                     if (this.sprite.overlap(m[i].sprite)) 
                     {
-                        console.log("COLLISION");
+                        //console.log("COLLISION");
 
                         this.sprite.remove();
                         m[i].sprite.remove();
                         m.splice(i, 1, "None");
+                        //s_explode.play();
                         
                     }
                 }
@@ -122,16 +161,19 @@ class Missile
         if (this.sprite.overlap(p))
         {
             this.sprite.remove();
-            console.log("Player Dead")
+            //console.log("Player Dead")
+            health -= 1;
+            
+            s_hurt.play();
         }
         
         //General Detection
         if (this.sprite.removed)
         {
             m.splice(this.id, 1, "None");
-                        
-            console.log(m);
-            console.log(l);
+            s_explode.play();
+            //console.log(m);
+            //console.log(l);
         }
 
     }
@@ -140,11 +182,12 @@ class Missile
         if (this.launched == false && this.sprite.overlap(l[this.id].sprite) == false)
         {
             this.launched = true;
-            console.log("LAUNCH");
+            //console.log("LAUNCH");
         }
         if (this.launched == true)
         {
             this.collision();
         }
+        
     }
 }
