@@ -48,15 +48,77 @@ let levels =
       [0,150,525,0],
       [0,1050,337.5,180],
     ],
-    [ //Level 4
+    [ //Level 4: Introduce Aiming Launcher
       [1,950,525,180]
+    ],
+    [ //Level 5
+      [0,150,150,225],
+      [0,1050,150,315],
+      [0,1050,525,45],
+      [1,150,525,0]
+    ],
+    [ //Level 6
+      [1,400,150,0],
+      [1,800,150,0],
+      [1,600,525,0]
+    ],
+    [ //Level 7
+      [1,150,137.5,0],
+      [1,150,337.5,0],
+      [1,150,537.5,0]
+    ],
+    [ //Level 8: Introduce Boosted Launcher
+      [2,200,475,0]
+    ],
+    [ //Level 9
+      [2,200,100,0],
+      [2,200,575,0],
+      [1,1000,200,0],
+      [1,1000,475,0]
+    ],
+    [ //Level 10
+      [0,100,100,90],
+      [0,300,100,90],
+      [0,500,100,90],
+      [0,700,100,90],
+      [0,900,100,90],
+      [0,1100,100,90]
+    ],
+    [ //Level 11: Intro to Connected Launchers
+      [2,200,200,90],
+      [0,262.5,200,0],
+      [2,1000,475,270],
+      [0,937.5,475,180]
+    ],
+    [
+      //Level 12
+      [2,150,312.5,270],
+      [2,150,375,90],
+      [0,212.5,312.5,270],
+      [0,212.5,375,90],
+      [1,1000,337.5,180]
+    ],
+    [//Level 13
+      [0,900,100,180],
+      [0,900,200,180],
+      [0,900,300,180],
+      [0,900,400,180],
+      [0,900,500,180],
+      [0,900,600,180],
+      [1,1100,337.5,180]
+    ],
+    [
+      [3,1000,200,180]
     ]
 
   ];
-let currLevel = 0;
+let currLevel = 11;//0;
 let startTimer = 180;
 let stopped = true;
 let end = false;
+let paused = false;
+let storedVel = [];
+let storedDir = [];
 
 //Sounds
 let s_shoot;
@@ -99,7 +161,7 @@ function setup() {
   }
   */
   angleMode(DEGREES);
-  drawLevel(0);
+  drawLevel(currLevel);
   shownHealth = width;
   //mic = new p5.AudioIn();
   //mic.start();
@@ -162,8 +224,8 @@ function getOutline(r,g,b)
 function drawHealth()
 {
   strokeWeight(20);
-  stroke(0);
-  line(0,20,width,20);
+  stroke(50,0,0);
+  line(0,17.5,width,17.5);
   stroke(225,0,0);
   
   let actualHealth = health*width/5;
@@ -171,7 +233,7 @@ function drawHealth()
   {
     shownHealth-=10;
   }
-  line(0,20,shownHealth,20);
+  line(0,17.5,shownHealth,17.5);
 }
 
 function step()
@@ -201,9 +263,47 @@ function draw() {
     }
   }
   */
-
-  
-
+  if (keyWentDown("SPACE") && end == false)
+  {
+    if (paused == false)
+    {
+      
+      p.setSpeed(0.0001);
+      for(let i=0;i<m.length;i++)
+      {
+        if (typeof m[i] == "object")
+        {
+          angleMode(DEGREES);
+          storedVel[i] = m[i].sprite.getSpeed();
+          storedDir[i] = m[i].sprite.getDirection();
+          //console.log(storedVel[i]);
+          m[i].sprite.setSpeed(0.0001);//, m[i].sprite.velocity.heading());//, m[i].sprite.rotation);//,storedDir[i]);//velocity.mult(0);//setMag(0); //mult(0);//
+          
+          console.log("DIR = "+ storedDir[i]);
+          console.log("ROT = " + m[i].sprite.velocity.heading());
+          //console.log(m[i].sprite.getSpeed());
+        }
+      }
+      paused = true;
+      stopped = true;
+    }
+    else
+    {
+      console.log("UNPAUSE");
+      for(let i=0;i<m.length;i++)
+      {
+        if (typeof m[i] == "object")
+        {
+          m[i].sprite.setSpeed(storedVel[i],storedDir[i]);// = createVector(,,storedVel[i].z);
+          console.log(storedVel[i]);
+          console.log(m[i].sprite.velocity);
+        }
+      }
+      paused = false;
+      stopped = false;
+      
+    }
+  }
   if (stopped == false)
   {
   //Player Movement
@@ -230,9 +330,9 @@ function draw() {
       step();
     }
 
-    if (p.position.y < 0)
+    if (p.position.y < 17)
     {
-      p.position.y = 0;
+      p.position.y = 17;
     }
     else if ( p.position.y > height)
     {
@@ -350,7 +450,7 @@ function draw() {
     noStroke();
     fill(0);
     text(round(map(startTimer,0,180,0.5,3.5)),width/2,height/2);
-    console.log(round(map(startTimer,0,180,0.5,3.5)));
+    //console.log(round(map(startTimer,0,180,0.5,3.5)));
   }
   if (startTimer == 10)
   {
@@ -377,7 +477,14 @@ function draw() {
     text("GAME OVER", width/2,height/2);
     textSize(30);
     text("Press SPACE to restart", width/2, height/2 + 75);
-    if (keyDown("SPACE"))
+    for(let i=0;i<m.length;i++)
+    {
+      if (typeof m[i] == "object")
+      {
+        m[i].sprite.setSpeed(0.0001);
+      }
+    }
+    if (keyDown("SPACE") && paused == false)
     {
       
       health = 5;
@@ -389,6 +496,25 @@ function draw() {
       console.log(health);
     }
   }
+
+  if (paused == true)
+  {
+    noStroke();
+    fill(0);
+    textAlign(CENTER,CENTER);
+    textSize(60);
+    text("PAUSED", width/2,height/2);
+    textSize(30);
+    text("Press SPACE to resume", width/2, height/2 + 75);
+    textSize(20);
+    text("Debug: Type '0' to Restart, '1' for Level 1, '2' for Level 4, '3' for Level 8, '4' for Level 11, '5' for Level 14", width/2, height/2 + 300)
+    stopped = true;
+  }
+
+  noFill();
+  stroke(230);
+  strokeWeight(15);
+  rect(0,0,width,height); //Draw whole outline
 }
 
 function mousePressed()
@@ -397,5 +523,59 @@ function mousePressed()
   if (s_wind.isPlaying() == false)
   {
     s_wind.play();
+  }
+}
+
+function keyPressed()
+{
+  if (paused == true)
+  {
+    if (key === "0")
+    {
+      health = 5;
+      shownHealth = width;
+      end = false;
+      console.log("START IT UP");
+      currLevel = 0;
+      drawLevel(0);
+      paused = false;
+    }
+    //console.log("1");
+    if (key == 1)
+    {
+      currLevel = 0;
+      drawLevel(currLevel);
+      console.log("1");
+      paused = false;
+    }
+    if (key == 2)
+    {
+      currLevel = 3;
+      drawLevel(currLevel);
+      console.log("4");
+      paused = false;
+    }
+    if (key == 3)
+    {
+      currLevel = 7;
+      drawLevel(currLevel);
+      console.log("8");
+      paused = false;
+    }
+    if (key == 4)
+    {
+      currLevel = 10;
+      drawLevel(currLevel);
+      console.log("11");
+      paused = false;
+    }
+    if (key == 5)
+    {
+      currLevel = 13;
+      drawLevel(currLevel);
+      console.log("14");
+      paused = false;
+    }
+    
   }
 }

@@ -8,7 +8,15 @@ class Missile
         this.sprite.friction = .01;
         this.sprite.position.x = l[this.id].sprite.position.x;
         this.sprite.position.y = l[this.id].sprite.position.y;
-        this.sprite.setSpeed(2,l[this.id].sprite.rotation);
+        this.boost = l[this.id].boost;
+        if (this.boost == true)
+        {
+            this.sprite.setSpeed(6,l[this.id].sprite.rotation);
+        }
+        else
+        {
+            this.sprite.setSpeed(2,l[this.id].sprite.rotation);
+        }
         this.launched = false;
         this.sprite.visible = false;
         this.color = color(235,203,36);//l[this.id].color;
@@ -56,6 +64,7 @@ class Missile
     }
     move()
     {
+        console.log(this.sprite.velocity.heading());
         if (this.spurt == true)
         {
             this.sTimer += 1;
@@ -110,9 +119,9 @@ class Missile
         {
             for (let i = 0; i < l.length; i++) 
             {
-                if (typeof l[i] == "object") 
+                if (typeof l[i] == "object" && m[i].launched == true) 
                 {
-                    
+                    //console.log(l[i]);
                     if (this.sprite.overlap(l[i].sprite)) 
                     {
                         //console.log("COLLISION");
@@ -140,7 +149,7 @@ class Missile
         {
             for (let i = 0; i < m.length; i++) 
             {
-                if (typeof m[i] == "object") 
+                if (typeof m[i] == "object" && m[i].launched == true) 
                 {
                     
                     if (this.sprite.overlap(m[i].sprite)) 

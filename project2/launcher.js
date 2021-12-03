@@ -13,6 +13,8 @@ class Launcher
         //console.log(type_);
         this.aiming = false; //Does it Aim?
         this.moving = false; //Does it Move?
+        this.healing = false; //Does it drop health pickup on death?
+        this.boost = false; //Are the missles boosted
         this.mtype = 0; //Missle Type
         switch(this.type)
         {
@@ -21,25 +23,31 @@ class Launcher
             case 1: //Aiming
                 this.aiming = true;
                 break;
-            case 2: //Spurt Shot
+            case 2: //Boosted Shot
+                this.boost = true;
+                break;
+            case 3: //Spurt Shot
                 this.aiming = true;
                 this.mtype = 1;
                 this.color = color(166,206,57);
                 this.outline = color(getOutline(166,206,57));
                 break;
-            case 3: //Moving
+            case 4: //Moving
                 this.aiming = true;
                 this.moving = true;
                 break;
-            case 4: //Moving Spurt
+            case 5: //Moving Spurt
                 this.aiming = true;
                 this.mtype = 1;
                 this.moving = true;
                 break;
-            case 5: //Exploding Missles
+            case 6: //Exploding Missles
                 this.aiming = true;
                 this.mtype = 2;
                 break;
+            case 7:
+                this.aiming = true;
+                this.healing = true;
         }
     }
     
@@ -55,6 +63,10 @@ class Launcher
             //rotate(this.h);
             fill(this.color);
             stroke(this.outline);
+            if (this.boost == true)
+            {
+                triangle(35,0,60,25,60,-25);
+            }
             triangle(20,0,45,25,45,-25);
             rect(0,0, 60,60);
             angleMode(DEGREES);
