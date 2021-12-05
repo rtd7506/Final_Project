@@ -90,8 +90,7 @@ let levels =
       [2,1000,475,270],
       [0,937.5,475,180]
     ],
-    [
-      //Level 12
+    [ //Level 12
       [2,150,312.5,270],
       [2,150,375,90],
       [0,212.5,312.5,270],
@@ -107,18 +106,38 @@ let levels =
       [0,900,600,180],
       [1,1100,337.5,180]
     ],
-    [
+    [ //Level 14: Intro to Stutter Launchers
       [3,1000,200,180]
+    ],
+    [ //Level 15
+      [3,200,200,0],
+      [3,1000,200,0]
+    ],
+    [ //Level 16
+      [3,150,150,0],
+      [2,150,525,0],
+      [3,1050,525,0],
+      [2,1050,150,180]
+    ],
+    [ //Level 17
+      [3,200,200,0],
+      [3,200,337.5,0],
+      [3,200,475,0],
+      [1,1000,200,0],
+      [1,1000,337.5,0],
+      [1,1000,475,0]
     ]
-
   ];
-let currLevel = 11;//0;
+let currLevel = 0;//11;//0;
 let startTimer = 180;
 let stopped = true;
 let end = false;
 let paused = false;
-let storedVel = [];
-let storedDir = [];
+let storedSpeed = []; //Stores the speeds of missiles while paused
+let storedDir = []; //Stores the directions of missiles while paused
+let currCheckpoint; // Stores the Current Checkpoint Level
+let checkpoints = [0,3,7,10,13]; //Stores all checkpoint levels
+let lives = 3;
 
 //Sounds
 let s_shoot;
@@ -136,12 +155,12 @@ let s_wind2;
 function preload()
 {
   s_shoot = loadSound("assets/s_shoot.wav");
-  s_explode  = loadSound("assets/s_explode.wav");
-  s_hurt  = loadSound("assets/s_hurt.wav");
-  s_start  = loadSound("assets/s_start.wav");
-  s_wind  = loadSound("assets/s_wind.wav");
+  s_explode = loadSound("assets/s_explode.wav");
+  s_hurt = loadSound("assets/s_hurt.wav");
+  s_start = loadSound("assets/s_start.wav");
+  s_wind = loadSound("assets/s_wind.wav");
   s_wind2 = loadSound("assets/s_wind2.wav");
-  s_move  = loadSound("assets/s_move.wav");
+  s_move = loadSound("assets/s_move.wav");
 }
 
 
@@ -211,6 +230,14 @@ function drawLevel(level)
   }
   s_wind.stop();
   startTimer = 180;
+
+  for(let i=0;i<checkpoints.length;i++)
+  {
+    if (currLevel == checkpoints[i])
+    {
+      currCheckpoint = currLevel;
+    }
+  }
 }
 
 function getOutline(r,g,b)
@@ -274,9 +301,9 @@ function draw() {
         if (typeof m[i] == "object")
         {
           angleMode(DEGREES);
-          storedVel[i] = m[i].sprite.getSpeed();
+          storedSpeed[i] = m[i].sprite.getSpeed();
           storedDir[i] = m[i].sprite.getDirection();
-          //console.log(storedVel[i]);
+          //console.log(storedSpeed[i]);
           m[i].sprite.setSpeed(0.0001);//, m[i].sprite.velocity.heading());//, m[i].sprite.rotation);//,storedDir[i]);//velocity.mult(0);//setMag(0); //mult(0);//
           
           console.log("DIR = "+ storedDir[i]);
@@ -294,8 +321,8 @@ function draw() {
       {
         if (typeof m[i] == "object")
         {
-          m[i].sprite.setSpeed(storedVel[i],storedDir[i]);// = createVector(,,storedVel[i].z);
-          console.log(storedVel[i]);
+          m[i].sprite.setSpeed(storedSpeed[i],storedDir[i]);// = createVector(,,storedSpeed[i].z);
+          console.log(storedSpeed[i]);
           console.log(m[i].sprite.velocity);
         }
       }
@@ -303,6 +330,14 @@ function draw() {
       stopped = false;
       
     }
+  }
+  if (currLevel == 0)
+  {
+    noStroke();
+    fill(0);
+    textAlign(CENTER,CENTER);
+    textSize(30);
+    text("Controls: WASD to Move", width/2,height/2 + 175);
   }
   if (stopped == false)
   {
@@ -389,9 +424,7 @@ function draw() {
             s_shoot.play();
             console.log("RESUP")
           }
-          
         }
-        
       }
     }
   }
@@ -445,10 +478,14 @@ function draw() {
     stopped = true;
     p.position.x = width/2;
     p.position.y = height/2;
-    textSize(30);
+    
     textAlign(CENTER,CENTER);
     noStroke();
     fill(0);
+    textSize(45);
+    let dispLevel = currLevel+1;
+    text("Level "+ dispLevel, width/2,height/2-175)
+    textSize(30);
     text(round(map(startTimer,0,180,0.5,3.5)),width/2,height/2);
     //console.log(round(map(startTimer,0,180,0.5,3.5)));
   }
@@ -476,7 +513,18 @@ function draw() {
     textSize(60);
     text("GAME OVER", width/2,height/2);
     textSize(30);
-    text("Press SPACE to restart", width/2, height/2 + 75);
+    if (lives == 1)
+    {
+      currCheckpoint = 0;
+      text("Press SPACE to restart", width/2, height/2 + 75);
+      text("You ran out of Lives", width/2, height/2 + 125);
+    }
+    else
+    {
+      text("Press SPACE to restart at the checkpoint", width/2, height/2 + 75);
+      text("You have "+lives+" Lives", width/2, height/2 + 125);
+    }
+    
     for(let i=0;i<m.length;i++)
     {
       if (typeof m[i] == "object")
@@ -486,14 +534,18 @@ function draw() {
     }
     if (keyDown("SPACE") && paused == false)
     {
-      
+      lives -= 1;
       health = 5;
       shownHealth = width;
       end = false;
       console.log("START IT UP");
-      currLevel = 0;
-      drawLevel(0);
+      currLevel = currCheckpoint;
+      drawLevel(currLevel);
       console.log(health);
+      if (lives == 0)
+      {
+        lives = 3;
+      }
     }
   }
 
@@ -506,6 +558,7 @@ function draw() {
     text("PAUSED", width/2,height/2);
     textSize(30);
     text("Press SPACE to resume", width/2, height/2 + 75);
+    text("You have "+lives+" Lives", width/2, height/2 + 125);
     textSize(20);
     text("Debug: Type '0' to Restart, '1' for Level 1, '2' for Level 4, '3' for Level 8, '4' for Level 11, '5' for Level 14", width/2, height/2 + 300)
     stopped = true;

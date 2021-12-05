@@ -64,7 +64,6 @@ class Missile
     }
     move()
     {
-        console.log(this.sprite.velocity.heading());
         if (this.spurt == true)
         {
             this.sTimer += 1;
@@ -119,7 +118,7 @@ class Missile
         {
             for (let i = 0; i < l.length; i++) 
             {
-                if (typeof l[i] == "object" && m[i].launched == true) 
+                if (typeof l[i] == "object") 
                 {
                     //console.log(l[i]);
                     if (this.sprite.overlap(l[i].sprite)) 
@@ -188,10 +187,17 @@ class Missile
     }
     update()
     {
-        if (this.launched == false && this.sprite.overlap(l[this.id].sprite) == false)
+        if (this.launched == false && typeof l[this.id] == "object")
+        {
+            if (this.sprite.overlap(l[this.id].sprite) == false)
+            {
+                this.launched = true;
+            }
+            //console.log("LAUNCH");
+        }
+        if (typeof l[this.id] != "object")
         {
             this.launched = true;
-            //console.log("LAUNCH");
         }
         if (this.launched == true)
         {
