@@ -66,6 +66,7 @@ class Missile
     }
     move()
     {
+        //console.log(this.sprite.velocity.heading());
         if (this.spurt == true)
         {
             this.sTimer += 1;
@@ -121,13 +122,13 @@ class Missile
         {
             for (let i = 0; i < l.length; i++) 
             {
-                if (typeof l[i] == "object") 
+                if (typeof l[i] == "object" && m[i].launched == true) 
                 {
                     //console.log(l[i]);
                     if (this.sprite.overlap(l[i].sprite)) 
                     {
                         //console.log("COLLISION");
-
+                        console.log("HIT1");
                         this.sprite.remove();
                         if (this.multi == false)
                         {
@@ -139,6 +140,7 @@ class Missile
                             m[this.id][this.id2].sprite.remove();
                             m[this.id].splice(this.id2,1);
                             l[i].sprite.remove();
+                            console.log("HIT");
                             //l.splice(i, 1, "None");
                         }
                         //s_explode.play();
@@ -167,7 +169,7 @@ class Missile
                       {
                         if (this.sprite.overlap(m[i][j].sprite) && m[i][j].launched == true && this.id2 != m[i][j].id2)
                         {
-                            console.log(m[i][j].id2);
+                            //console.log(m[i][j].id2);
                             this.sprite.remove();
                             m[i][j].sprite.remove();
                             m[i].splice(j,1);
@@ -223,17 +225,10 @@ class Missile
     }
     update()
     {
-        if (this.launched == false && typeof l[this.id] == "object")
-        {
-            if (this.sprite.overlap(l[this.id].sprite) == false)
-            {
-                this.launched = true;
-            }
-            //console.log("LAUNCH");
-        }
-        if (typeof l[this.id] != "object")
+        if (this.launched == false && this.sprite.overlap(l[this.id].sprite) == false)
         {
             this.launched = true;
+            //console.log("LAUNCH");
         }
         if (this.launched == true)
         {

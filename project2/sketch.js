@@ -166,6 +166,9 @@ function preload()
   s_move = loadSound("assets/s_move.wav");
 }
 
+let test1 = [1];
+let test2 = [[1]];
+
 
 function setup() {
   createCanvas(1200, 675);
@@ -189,6 +192,8 @@ function setup() {
   //mic.start();
   //amp = new p5.Amplitude();
  // amp.setInput(mic);
+ //console.log(test1[0][0]);
+ //console.log(typeof test2);
  
 }
 
@@ -308,7 +313,7 @@ function draw() {
       p.setSpeed(0.0001);
       for(let i=0;i<m.length;i++)
       {
-        if (typeof m[i] == "object" && l[i].multi == false)
+        if (typeof m[i] == "object" && m[i][0] == "undefined" && m[i][0] != "N")
         {
           angleMode(DEGREES);
           storedSpeed[i] = m[i].sprite.getSpeed();
@@ -320,7 +325,8 @@ function draw() {
           console.log("ROT = " + m[i].sprite.velocity.heading());
           //console.log(m[i].sprite.getSpeed());
         }
-        if (l[i].multi == true)
+        console.log(m[i][0]);
+        if (m[i][0] != "undefined" && m[i][0] != "N")
         {
           storedSpeed[i] = [];
           storedDir[i] = [];
@@ -328,7 +334,7 @@ function draw() {
           {
             storedSpeed[i][j] = m[i][j].sprite.getSpeed();
             storedDir[i][j] = m[i][j].sprite.getDirection();
-            m[i][j].setSpeed(0.0001);
+            m[i][j].sprite.setSpeed(0.0001);
           }
         }
       }
@@ -341,10 +347,12 @@ function draw() {
       for(let i=0;i<m.length;i++)
       {
         console.log(typeof m[i]);
-        if (l[i].multi == true)
+        if (m[i][0] != "undefined")
         {
           for (let j=0;j<m[i].length;j++)
-          
+          {
+            m[i][j].sprite.setSpeed(storedSpeed[i][j],storedDir[i][j]);
+          }
         }
         else if (typeof m[i] == "object")
         {
@@ -432,8 +440,16 @@ function draw() {
   {
     for (let i=0;i<m.length;i++)
     {
-      if (typeof m[i] == "object" && l[i].multi == false)
+      //console.log(typeof m[i] == "object")
+      //console.log(m[i][0] == undefined);
+      if (typeof m[i] == "object" && m[i][0] == undefined)
       {
+        
+      }
+      //console.log(m);
+      if (typeof m[i] == "object" && l[i].multi == false)//m[i][0] == undefined)
+      {
+        //console.log("GOOD");
         m[i].render();
         if (stopped == false)
         {
@@ -441,15 +457,19 @@ function draw() {
           m[i].update();
         }
       }
-      else if(l[i].multi == true && m[i].length > 0)
+      else if(m[i][0] != "undefined" && m[i].length > 0 && m[i] != "None")
       {
         for(let j=0;j<m[i].length;j++)
         {
           if (typeof m[i][j] == "object")
           {
-            m[i][j].move();
             m[i][j].render();
-            m[i][j].update();
+            //console.log("MOVY SCARY SKELETONS");
+            if (stopped == false)
+            {
+              m[i][j].move();
+              m[i][j].update();
+            }
           }
         }
       }
@@ -457,7 +477,7 @@ function draw() {
       {
         if (typeof l[i] == "object")
         {
-          if (stopped == false && l[i].mtype != 2)
+          if (stopped == false && l[i].mtype != 2 && m[i] == "None")
           {
             m[i] = new Missile(i);
             s_shoot.play();
