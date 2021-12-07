@@ -1,6 +1,6 @@
 class Missile
 {
-    constructor(id_)
+    constructor(id_,id2_)
     {
         this.id = id_;
         this.sprite = createSprite(0,0, 25, 25);
@@ -22,8 +22,10 @@ class Missile
         this.color = color(235,203,36);//l[this.id].color;
         this.outline = color(getOutline(235,203,36));//l[this.id].outline;
         this.spurt = l[this.id].mtype == 1;
+        this.multi = l[this.id].mtype == 2;
         this.sMove = false;
         this.sTimer = 0;
+        this.id2 = id2_;
         //console.log(this.spurt);
         
         this.a = 0;
@@ -80,7 +82,8 @@ class Missile
                 this.sMove = false;
             }
         }
-
+        // Movement code adapted from Craig Reynold's autonomous steering behaviors
+        // See: http://www.red3d.com/cwr/
         this.sprite.acceleration = p5.Vector.sub(p.position, this.sprite.position);
         this.sprite.acceleration.setMag(.05);
         if (this.spurt == true)
@@ -126,8 +129,18 @@ class Missile
                         //console.log("COLLISION");
 
                         this.sprite.remove();
-                        l[i].sprite.remove();
-                        l.splice(i, 1, "None");
+                        if (this.multi == false)
+                        {
+                            l[i].sprite.remove();
+                            l.splice(i, 1, "None");
+                        }
+                        else
+                        {
+                            m[this.id][this.id2].sprite.remove();
+                            m[this.id].splice(this.id2,1);
+                            l[i].sprite.remove();
+                            //l.splice(i, 1, "None");
+                        }
                         //s_explode.play();
                         
                     }
@@ -137,8 +150,6 @@ class Missile
                         this.sprite.remove();
                     }
                     */
-
-                    
                 }
             }
         }
@@ -148,16 +159,32 @@ class Missile
         {
             for (let i = 0; i < m.length; i++) 
             {
-                if (typeof m[i] == "object" && m[i].launched == true) 
+                if (typeof m[i] == "object") 
                 {
-                    
-                    if (this.sprite.overlap(m[i].sprite)) 
+                    if (this.multi == true && m[i].length > 0)
+                    {
+                      for(let j=0;j<m[i].length;j++)
+                      {
+                        if (this.sprite.overlap(m[i][j].sprite) && m[i][j].launched == true && this.id2 != m[i][j].id2)
+                        {
+                            console.log(m[i][j].id2);
+                            this.sprite.remove();
+                            m[i][j].sprite.remove();
+                            m[i].splice(j,1);
+                        }
+                      }
+                        
+                    }
+                    else if (this.sprite.overlap(m[i].sprite) && m[i].launched == true) 
                     {
                         //console.log("COLLISION");
 
                         this.sprite.remove();
-                        m[i].sprite.remove();
-                        m.splice(i, 1, "None");
+                        if (m[i].multi == false)
+                        {
+                            m[i].sprite.remove();
+                            m.splice(i, 1, "None");
+                        }
                         //s_explode.play();
                         
                     }
@@ -168,7 +195,16 @@ class Missile
         //Player Collision
         if (this.sprite.overlap(p))
         {
-            this.sprite.remove();
+            if (this.multi == true)
+            {
+                m[this.id][this.id2].sprite.remove();
+                m[this.id].splice(this.id2,1);
+            }
+            else
+            {
+                this.sprite.remove();
+            }
+            
             //console.log("Player Dead")
             health -= 1;
             
@@ -176,7 +212,7 @@ class Missile
         }
         
         //General Detection
-        if (this.sprite.removed)
+        if (this.sprite.removed && this.multi == false)
         {
             m.splice(this.id, 1, "None");
             s_explode.play();

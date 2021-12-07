@@ -126,6 +126,9 @@ let levels =
       [1,1000,200,0],
       [1,1000,337.5,0],
       [1,1000,475,0]
+    ],
+    [ //Level 18
+      [4,1000,200,180]
     ]
   ];
 let currLevel = 0;//11;//0;
@@ -224,7 +227,14 @@ function drawLevel(level)
     //{
     l[i] = new Launcher(i,posX,posY,head,type);
     //m[i] = new Missile(i);
-    m[i] = "None";
+    if (type != 4)
+    {
+      m[i] = "None";
+    }
+    else
+    {
+      m[i] = [];
+    }
     //s_shoot.play();
     //}
   }
@@ -298,7 +308,7 @@ function draw() {
       p.setSpeed(0.0001);
       for(let i=0;i<m.length;i++)
       {
-        if (typeof m[i] == "object")
+        if (typeof m[i] == "object" && l[i].multi == false)
         {
           angleMode(DEGREES);
           storedSpeed[i] = m[i].sprite.getSpeed();
@@ -310,6 +320,17 @@ function draw() {
           console.log("ROT = " + m[i].sprite.velocity.heading());
           //console.log(m[i].sprite.getSpeed());
         }
+        if (l[i].multi == true)
+        {
+          storedSpeed[i] = [];
+          storedDir[i] = [];
+          for (let j=0;j<m[i].length;j++)
+          {
+            storedSpeed[i][j] = m[i][j].sprite.getSpeed();
+            storedDir[i][j] = m[i][j].sprite.getDirection();
+            m[i][j].setSpeed(0.0001);
+          }
+        }
       }
       paused = true;
       stopped = true;
@@ -319,7 +340,13 @@ function draw() {
       console.log("UNPAUSE");
       for(let i=0;i<m.length;i++)
       {
-        if (typeof m[i] == "object")
+        console.log(typeof m[i]);
+        if (l[i].multi == true)
+        {
+          for (let j=0;j<m[i].length;j++)
+          
+        }
+        else if (typeof m[i] == "object")
         {
           m[i].sprite.setSpeed(storedSpeed[i],storedDir[i]);// = createVector(,,storedSpeed[i].z);
           console.log(storedSpeed[i]);
@@ -405,7 +432,7 @@ function draw() {
   {
     for (let i=0;i<m.length;i++)
     {
-      if (typeof m[i] == "object")
+      if (typeof m[i] == "object" && l[i].multi == false)
       {
         m[i].render();
         if (stopped == false)
@@ -414,11 +441,23 @@ function draw() {
           m[i].update();
         }
       }
+      else if(l[i].multi == true && m[i].length > 0)
+      {
+        for(let j=0;j<m[i].length;j++)
+        {
+          if (typeof m[i][j] == "object")
+          {
+            m[i][j].move();
+            m[i][j].render();
+            m[i][j].update();
+          }
+        }
+      }
       else
       {
         if (typeof l[i] == "object")
         {
-          if (stopped == false)
+          if (stopped == false && l[i].mtype != 2)
           {
             m[i] = new Missile(i);
             s_shoot.play();
@@ -629,6 +668,12 @@ function keyPressed()
       console.log("14");
       paused = false;
     }
-    
+    if (key == 6)
+    {
+      currLevel = 17;
+      drawLevel(currLevel);
+      console.log("18");
+      paused = false;
+    }
   }
 }
