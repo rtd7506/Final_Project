@@ -1,0 +1,18 @@
+{ 
+  "frames": [{
+   "name": "idle_1",
+    "position": { "x": 0, "y": 0, "w": 16, "h": 16 }
+  },
+  {
+   "name": "idle_2",
+    "position": { "x": 16, "y": 0, "w": 16, "h": 16 }
+  },
+  {
+    "name": "idle_3",
+     "position": { "x": 32, "y": 0, "w": 16, "h": 16 }
+  },
+  {
+    "name": "idle_4",
+     "position": { "x": 48, "y": 0, "w": 16, "h": 16 }
+   }
+]}

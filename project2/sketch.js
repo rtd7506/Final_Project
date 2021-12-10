@@ -1,5 +1,5 @@
-//Player Variables
-let p; //player
+//p Variables
+let p; //p
 let MAX_SPEED = 5;
 let ACCELERATION = 1;
 let FRICTION = 0.1;
@@ -127,8 +127,25 @@ let levels =
       [1,1000,337.5,0],
       [1,1000,475,0]
     ],
-    [ //Level 18
-      [4,1000,200,180]
+    [ //Level 18: Intro to Multi Launchers
+      [4,200,200,0]
+    ],
+    [
+      [4,250,337.5,0],
+      [0,1000,150,180],
+      [0,1000,525,180]
+    ],
+    [
+      [4,200,200,0],
+      [4,1000,200,0],
+      [3,200,475,0],
+      [3,1000,475,0]
+    ],
+    [
+      [1,200,200,0],
+      [2,1000,200,180],
+      [3,200,475,0],
+      [4,1000,475,0]
     ]
   ];
 let currLevel = 0;//11;//0;
@@ -139,8 +156,9 @@ let paused = false;
 let storedSpeed = []; //Stores the speeds of missiles while paused
 let storedDir = []; //Stores the directions of missiles while paused
 let currCheckpoint; // Stores the Current Checkpoint Level
-let checkpoints = [0,3,7,10,13]; //Stores all checkpoint levels
+let checkpoints = [0,3,7,10,13,17]; //Stores all checkpoint levels
 let lives = 3;
+let phase = false;
 
 //Sounds
 let s_shoot;
@@ -155,6 +173,13 @@ let s_wind2;
 //let mic;
 //let amp;
 
+//Images
+let spritesheet;
+let spritedata;
+let idle_anim;
+let move_anim;
+let phase_start_anim;
+
 function preload()
 {
   s_shoot = loadSound("assets/s_shoot.wav");
@@ -164,10 +189,9 @@ function preload()
   s_wind = loadSound("assets/s_wind.wav");
   s_wind2 = loadSound("assets/s_wind2.wav");
   s_move = loadSound("assets/s_move.wav");
+  spritedata = loadJSON('sprites_2.json');
+  spritesheet = loadImage('assets/ghost_idle.png');//ghost2_sheet.png');
 }
-
-let test1 = [1];
-let test2 = [[1]];
 
 
 function setup() {
@@ -175,7 +199,19 @@ function setup() {
   p = createSprite(width / 2, height / 2, 25, 25);
   p.maxSpeed = MAX_SPEED;
   p.friction = FRICTION;
-  //p.visible = false;
+
+  //Animations
+  idle_anim = loadAnimation('assets/anims/ghost/ghost1.png','assets/anims/ghost/ghost4.png');
+  idle_anim.frameDelay = 10;
+  p.addAnimation('idle',idle_anim);
+  move_anim = loadAnimation('assets/anims/ghost/ghost5.png','assets/anims/ghost/ghost8.png');
+  move_anim.frameDelay = 10;
+  p.addAnimation('move',move_anim);
+  phase_start_anim = loadAnimation('assets/anims/ghost/ghost9.png','assets/anims/ghost/ghost12.png');
+  phase_start_anim.frameDelay = 10;
+  p.addAnimation('phase_start',phase_start_anim);
+
+  p.visible = false;
   //Missle Variables
   //Launcher Variables
   /*
@@ -191,9 +227,8 @@ function setup() {
   //mic = new p5.AudioIn();
   //mic.start();
   //amp = new p5.Amplitude();
- // amp.setInput(mic);
- //console.log(test1[0][0]);
- //console.log(typeof test2);
+  // amp.setInput(mic);
+  
  
 }
 
@@ -218,7 +253,7 @@ function drawLevel(level)
   }
   l = [];
   
-  //Set Player Position
+  //Set p Position
   p.position.x = width/2;
   p.position.y = height/2;
 
@@ -232,14 +267,6 @@ function drawLevel(level)
     //{
     l[i] = new Launcher(i,posX,posY,head,type);
     //m[i] = new Missile(i);
-    if (type != 4)
-    {
-      m[i] = "None";
-    }
-    else
-    {
-      m[i] = [];
-    }
     //s_shoot.play();
     //}
   }
@@ -280,6 +307,7 @@ function drawHealth()
 
 function step()
 {
+  p.changeAnimation('move');
   if (s_move.isPlaying() == false)
   {
     //s_move.play();
@@ -289,6 +317,7 @@ function step()
 function draw() {
   background(255);
   strokeWeight(5);
+
 
   //Draw Level
   /*
@@ -305,7 +334,7 @@ function draw() {
     }
   }
   */
-  if (keyWentDown("SPACE") && end == false)
+  if (keyWentDown(ESCAPE) && end == false)
   {
     if (paused == false)
     {
@@ -313,7 +342,7 @@ function draw() {
       p.setSpeed(0.0001);
       for(let i=0;i<m.length;i++)
       {
-        if (typeof m[i] == "object" && m[i][0] == "undefined" && m[i][0] != "N")
+        if (typeof m[i] == "object")
         {
           angleMode(DEGREES);
           storedSpeed[i] = m[i].sprite.getSpeed();
@@ -321,21 +350,9 @@ function draw() {
           //console.log(storedSpeed[i]);
           m[i].sprite.setSpeed(0.0001);//, m[i].sprite.velocity.heading());//, m[i].sprite.rotation);//,storedDir[i]);//velocity.mult(0);//setMag(0); //mult(0);//
           
-          console.log("DIR = "+ storedDir[i]);
-          console.log("ROT = " + m[i].sprite.velocity.heading());
+          //console.log("DIR = "+ storedDir[i]);
+          //console.log("ROT = " + m[i].sprite.velocity.heading());
           //console.log(m[i].sprite.getSpeed());
-        }
-        console.log(m[i][0]);
-        if (m[i][0] != "undefined" && m[i][0] != "N")
-        {
-          storedSpeed[i] = [];
-          storedDir[i] = [];
-          for (let j=0;j<m[i].length;j++)
-          {
-            storedSpeed[i][j] = m[i][j].sprite.getSpeed();
-            storedDir[i][j] = m[i][j].sprite.getDirection();
-            m[i][j].sprite.setSpeed(0.0001);
-          }
         }
       }
       paused = true;
@@ -346,19 +363,11 @@ function draw() {
       console.log("UNPAUSE");
       for(let i=0;i<m.length;i++)
       {
-        console.log(typeof m[i]);
-        if (m[i][0] != "undefined")
-        {
-          for (let j=0;j<m[i].length;j++)
-          {
-            m[i][j].sprite.setSpeed(storedSpeed[i][j],storedDir[i][j]);
-          }
-        }
-        else if (typeof m[i] == "object")
+        if (typeof m[i] == "object")
         {
           m[i].sprite.setSpeed(storedSpeed[i],storedDir[i]);// = createVector(,,storedSpeed[i].z);
-          console.log(storedSpeed[i]);
-          console.log(m[i].sprite.velocity);
+          //console.log(storedSpeed[i]);
+          //console.log(m[i].sprite.velocity);
         }
       }
       paused = false;
@@ -376,7 +385,8 @@ function draw() {
   }
   if (stopped == false)
   {
-  //Player Movement
+  //p Movement
+    p.changeAnimation('idle');
     if (keyDown("w")) {
       //p.velocity.y = -5;
       p.velocity.y += -1 * ACCELERATION;
@@ -390,14 +400,22 @@ function draw() {
     }
     if (keyDown("a")) {
       //p.velocity.x = -5;
+      p.mirrorX(1);
       p.velocity.x += -1 * ACCELERATION;
       step();
 
     }
     if (keyDown("d")) {
       //p.velocity.x = 5;
+      p.mirrorX(-1);
       p.velocity.x += ACCELERATION;
       step();
+    }
+    if (keyWentDown("SPACE"))
+    {
+      phase = true;
+      //console.log(phase);
+      p.changeAnimation('phase_start');
     }
 
     if (p.position.y < 17)
@@ -421,7 +439,7 @@ function draw() {
   /* //Idea for a dash move to free up movement
   if (keyDown("SPACE"))
   {
-    console.log(p.maxSpeed);
+    //console.log(p.maxSpeed);
     p.velocity.mult(1.5);
     p.maxSpeed = 7;
   }
@@ -440,16 +458,8 @@ function draw() {
   {
     for (let i=0;i<m.length;i++)
     {
-      //console.log(typeof m[i] == "object")
-      //console.log(m[i][0] == undefined);
-      if (typeof m[i] == "object" && m[i][0] == undefined)
+      if (typeof m[i] == "object")
       {
-        
-      }
-      //console.log(m);
-      if (typeof m[i] == "object" && l[i].multi == false)//m[i][0] == undefined)
-      {
-        //console.log("GOOD");
         m[i].render();
         if (stopped == false)
         {
@@ -457,37 +467,15 @@ function draw() {
           m[i].update();
         }
       }
-      else if(m[i][0] != "undefined" && m[i].length > 0 && m[i] != "None")
-      {
-        for(let j=0;j<m[i].length;j++)
-        {
-          if (typeof m[i][j] == "object")
-          {
-            m[i][j].render();
-            //console.log("MOVY SCARY SKELETONS");
-            if (stopped == false)
-            {
-              m[i][j].move();
-              m[i][j].update();
-            }
-          }
-        }
-      }
       else
       {
         if (typeof l[i] == "object")
         {
-          if (stopped == false && l[i].mtype != 2 && m[i] == "None")
-          {
-            m[i] = new Missile(i);
-            s_shoot.play();
-            console.log("RESUP")
-          }
+          
         }
       }
     }
   }
-
   if (l.length > 0) 
   {
     for (let i=0;i<l.length;i++)
@@ -495,6 +483,24 @@ function draw() {
       if (typeof l[i] == "object")
       {
         l[i].render();
+        if (stopped == false)
+        {
+          let clear = false;
+          for(let j=0;j<m.length;j++)
+          {
+            if (m[j].id == l[i].id)
+            {
+              clear = true;
+              console.log(l[i].id)
+            }
+          }
+          if (clear == false && l[i].mtype!= 2)
+          {
+            m.push(new Missile(l[i].id));
+            s_shoot.play();
+            console.log("RESUP")
+          }      
+        }
       }
     }
   }
@@ -507,28 +513,17 @@ function draw() {
   ellipse(p.position.x, p.position.y, 50, 50);
 
   drawHealth();
-
+  
   //Level Changer
-  if (l.length > 0)
+  if (l.length < 1)
   {
-    let levelTest = false;
-    for (let i = 0; i < l.length; i++) 
+    currLevel+=1;
+    //console.log(currLevel);
+    if (currLevel > levels.length-1)
     {
-      if (typeof l[i] == "object") 
-      {
-        levelTest = true;
-      }
+      currLevel = 0;
     }
-    if (levelTest == false)
-    {
-      currLevel+=1;
-      //console.log(currLevel);
-      if (currLevel > levels.length-1)
-      {
-        currLevel = 0;
-      }
-      drawLevel(currLevel);
-    }
+    drawLevel(currLevel);
   }
 
   if (startTimer > 0)
@@ -621,6 +616,11 @@ function draw() {
     textSize(20);
     text("Debug: Type '0' to Restart, '1' for Level 1, '2' for Level 4, '3' for Level 8, '4' for Level 11, '5' for Level 14", width/2, height/2 + 300)
     stopped = true;
+  }
+  else
+  {
+    console.log(m);
+    console.log(l);
   }
 
   noFill();
