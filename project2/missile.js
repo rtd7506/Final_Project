@@ -143,6 +143,7 @@ class Missile
                         //console.log("COLLISION");
 
                         this.sprite.remove();
+                        e.push(new Explosion(l[i].sprite.position.x,l[i].sprite.position.y,125))
                         l[i].sprite.remove();
                         l.splice(i, 1);
                         console.log("DIEEEEEE");
@@ -172,7 +173,7 @@ class Missile
                     if (this.sprite.overlap(m[i].sprite) && this.sprite != m[i].sprite) 
                     {
                         //console.log("COLLISION");
-
+                        e.push(new Explosion(this.sprite.position.x,this.sprite.position.y,75))
                         this.sprite.remove();
                         m[i].sprite.remove();
                         m.splice(i, 1);
@@ -196,6 +197,7 @@ class Missile
             {
                 health -= 1;
             }
+            hurt = true;
             s_hurt.play();
         }
         

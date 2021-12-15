@@ -1,6 +1,6 @@
 class Launcher
 {
-    constructor(id_,x_init,y_init,h_init,type_)
+    constructor(id_,x_init,y_init,h_init,type_,px_,py_)
     {
         this.id = id_;
         this.h = h_init;
@@ -19,6 +19,11 @@ class Launcher
         this.mtype = 0; //Missle Type
         this.fireAnim = 0;
         this.multiTimer = 0;
+        this.px = px_; //List of moving launcher checkpoints x
+        this.py = py_; //List of moving launcher checkpoints y
+        this.pTracker = 0; //Tracks where moving launchers are
+        this.curr = 0;
+        this.target = 1;
         switch(this.type)
         {
             case 0: //Basic
@@ -43,13 +48,15 @@ class Launcher
                 this.outline = color(getOutline(142,124,195));
                 break;
             case 5: //Moving
-                this.aiming = true;
                 this.moving = true;
+                this.color = color(245,162,79);
+                this.outline = color(getOutline(245,162,79));
                 break;
-            case 6: //Moving Spurt
+            case 6: //Moving Aiming
                 this.aiming = true;
-                this.mtype = 1;
                 this.moving = true;
+                this.color = color(245,162,79);
+                this.outline = color(getOutline(245,162,79));
                 break;
             case 7: //Exploding Missles
                 this.aiming = true;
@@ -63,6 +70,18 @@ class Launcher
     
     render()
     {
+        if (this.moving == true)
+        {
+            for(let i=1;i<this.px.length;i++)
+            {
+                strokeWeight(15);
+                stroke(245,162,79);
+                line(this.px[i-1],this.py[i-1],this.px[i],this.py[i]);
+            }
+            strokeWeight(15);
+            line(this.px[0],this.py[0],this.px[this.px.length-1],this.py[this.py.length-1]);
+            strokeWeight(5);
+        }
         if (this.sprite.removed == false)
         {
             p.collide(this.sprite);
@@ -120,7 +139,31 @@ class Launcher
             }
             
         }
+        
+    }
 
+    move()
+    {
+        console.log(this.curr);
+        console.log(this.target);
+        if (dist(this.sprite.position.x,this.sprite.position.y,this.px[this.target],this.py[this.target]) < 2)
+        {
+            this.curr+=1;
+            this.target+=1;
+            if (this.curr > this.px.length-1)
+            {
+                this.curr = 0;
+            }
+            if (this.target > this.px.length-1)
+            {
+                this.target = 0;
+            }
+        }
+        this.p1 = createVector(this.px[this.curr],this.py[this.curr]);
+        this.p2 = createVector(this.px[this.target],this.py[this.target]);
+        this.moveDir = p5.Vector.sub(this.p1, this.p2);
+        this.moveDir.setMag(-2);
+        this.sprite.position.add(this.moveDir);
     }
 
 }

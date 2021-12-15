@@ -1,3 +1,5 @@
+// Shoot Camp
+
 //p Variables
 let p; //p
 let MAX_SPEED = 5;
@@ -130,22 +132,37 @@ let levels =
     [ //Level 18: Intro to Multi Launchers
       [4,200,200,0]
     ],
-    [
+    [ //Level 19
       [4,250,337.5,0],
       [0,1000,150,180],
       [0,1000,525,180]
     ],
-    [
+    [ //Level 20
       [4,200,200,0],
       [4,1000,200,0],
       [3,200,475,0],
       [3,1000,475,0]
     ],
-    [
+    [ //Level 21
       [1,200,200,0],
       [2,1000,200,180],
       [3,200,475,0],
       [4,1000,475,0]
+    ],
+    [ //Level 23: Intro to Moving Launchers
+      [5,200,200,90,[200,1000],[200,200]]
+    ],
+    [ //Level 24
+      [6,200,575,90,[200,600,1000],[575,100,575]]
+    ],
+    [ //Level 25
+      [5,200,200,0,[200,200],[200,475]],
+      [5,1000,475,180,[1000,1000],[475,200]]
+    ],
+    [ //Level 26
+      [5,950,300,180,[950,1050],[300,300]],
+      [5,1050,375,180,[950,1050],[375,375]],
+      [6,1100,100,90,[1100,1100,100,100],[100,575,575,100]]
     ]
   ];
 let currLevel = 0;//11;//0;
@@ -159,6 +176,9 @@ let currCheckpoint; // Stores the Current Checkpoint Level
 let checkpoints = [0,3,7,10,13,17]; //Stores all checkpoint levels
 let lives = 3;
 let phase = false;
+let e = []; //List of explosions
+screen = 0; //0 is Title Screen, 1 is Tutorial, 2 is Levels, 3 is Final Game Over
+
 
 //Sounds
 let s_shoot;
@@ -178,7 +198,10 @@ let spritesheet;
 let spritedata;
 let idle_anim;
 let move_anim;
+let hurt_anim;
 let phase_start_anim;
+let hTimer = 0;
+let hurt = false;
 
 function preload()
 {
@@ -207,11 +230,15 @@ function setup() {
   move_anim = loadAnimation('assets/anims/ghost/ghost5.png','assets/anims/ghost/ghost8.png');
   move_anim.frameDelay = 10;
   p.addAnimation('move',move_anim);
+  hurt_anim = loadAnimation('assets/anims/ghost/ghost17.png','assets/anims/ghost/ghost21.png');
+  hurt_anim.frameDelay = 10;
+  p.addAnimation('hurt',hurt_anim);
   phase_start_anim = loadAnimation('assets/anims/ghost/ghost9.png','assets/anims/ghost/ghost12.png');
   phase_start_anim.frameDelay = 10;
   p.addAnimation('phase_start',phase_start_anim);
 
   p.visible = false;
+
   //Missle Variables
   //Launcher Variables
   /*
@@ -262,10 +289,24 @@ function drawLevel(level)
     let posX = levels[level][i][1];
     let posY = levels[level][i][2];
     let head = levels[level][i][3];
-    let type = levels[level][i][0]
+    let type = levels[level][i][0];
+    if (type == 5 || type == 6)
+    {
+      let px = [];
+      let py = [];
+      for(let j=0;j<levels[level][i][4].length;j++)
+      {
+        px.push(levels[level][i][4][j]);
+        py.push(levels[level][i][5][j]);
+      }
+      l[i] = new Launcher(i,posX,posY,head,type,px,py);
+    }
+    else
+    {
+      l[i] = new Launcher(i,posX,posY,head,type);
+    }
     //if (levels[level][i][0] == 0)
     //{
-    l[i] = new Launcher(i,posX,posY,head,type);
     //m[i] = new Missile(i);
     //s_shoot.play();
     //}
@@ -282,9 +323,9 @@ function drawLevel(level)
   }
 }
 
-function getOutline(r,g,b)
+function getOutline(r,g,b,a)
 {
-  let res = color(r-40,g-40,b-40);
+  let res = color(r-40,g-40,b-40,a);
   //console.log(res);
   return res;
   //return 0;
@@ -307,14 +348,29 @@ function drawHealth()
 
 function step()
 {
-  p.changeAnimation('move');
+  if (hurt == false)
+  {
+    p.changeAnimation('move');
+  }
   if (s_move.isPlaying() == false)
   {
     //s_move.play();
   }
 }
 
-function draw() {
+function draw()
+{
+  if (screen == 0)
+  {
+    titleScreen();
+  }
+  else
+  {
+    gameScreen();
+  }
+}
+
+function gameScreen() {
   background(255);
   strokeWeight(5);
 
@@ -334,7 +390,7 @@ function draw() {
     }
   }
   */
-  if (keyWentDown(ESCAPE) && end == false)
+  if (keyWentDown("SPACE") && end == false)
   {
     if (paused == false)
     {
@@ -386,7 +442,10 @@ function draw() {
   if (stopped == false)
   {
   //p Movement
-    p.changeAnimation('idle');
+    if (hurt == false)
+    {
+      p.changeAnimation('idle');
+    }
     if (keyDown("w")) {
       //p.velocity.y = -5;
       p.velocity.y += -1 * ACCELERATION;
@@ -415,7 +474,7 @@ function draw() {
     {
       phase = true;
       //console.log(phase);
-      p.changeAnimation('phase_start');
+      //p.changeAnimation('phase_start');
     }
 
     if (p.position.y < 17)
@@ -478,9 +537,10 @@ function draw() {
   }
   if (l.length > 0) 
   {
+    console.log(l);
     for (let i=0;i<l.length;i++)
     {
-      if (typeof l[i] == "object")
+      if (l[i].sprite.removed == false)
       {
         l[i].render();
         if (stopped == false)
@@ -488,24 +548,43 @@ function draw() {
           let clear = false;
           for(let j=0;j<m.length;j++)
           {
-            if (m[j].id == l[i].id)
+            console.log(l);
+            if (l[i].sprite.removed == false)
             {
-              clear = true;
-              console.log(l[i].id)
+              if (m[j].id == l[i].id)
+              {
+                clear = true;
+                //console.log(l[i].id)
+              }
             }
           }
-          if (clear == false && l[i].mtype!= 2)
+          console.log(l);
+          if (l.length>0)
           {
-            m.push(new Missile(l[i].id));
-            s_shoot.play();
-            console.log("RESUP")
-          }      
+            if (clear == false && l[i].mtype != 2 && l[i].sprite.removed == false)
+            {
+              m.push(new Missile(l[i].id));
+              s_shoot.play();
+              console.log("RESUP")
+            }      
+          }
+          if (l[i].moving == true)
+          {
+            l[i].move();
+          }
         }
       }
     }
   }
 
-  
+  //Explosion rendering
+  if (e.length>0)
+  {
+    for (let i=0;i<e.length;i++)
+    {
+      e[i].render();
+    }
+  }  
 
   drawSprites();
   fill(58,189,242);
@@ -553,6 +632,19 @@ function draw() {
   }
   //console.log(map(amp.getLevel(),0,1.0,10,100));
   //console.log(amp.getLevel());
+
+  if (hurt == true)
+  {
+    hTimer += 1;
+    console.log("HURT");
+    p.changeAnimation('hurt');
+    if (hTimer > 50)
+    {
+      hurt = false;
+      hTimer = 0;
+    }
+  }
+
   if (health<1)
   {
     stopped = true;
@@ -614,7 +706,7 @@ function draw() {
     text("Press SPACE to resume", width/2, height/2 + 75);
     text("You have "+lives+" Lives", width/2, height/2 + 125);
     textSize(20);
-    text("Debug: Type '0' to Restart, '1' for Level 1, '2' for Level 4, '3' for Level 8, '4' for Level 11, '5' for Level 14", width/2, height/2 + 300)
+    text("Debug: Type '0' to Restart, '1' for Level 1, '2' for Level 4, '3' for Level 8, '4' for Level 11, '5' for Level 14, '6' for Level 17", width/2, height/2 + 300)
     stopped = true;
   }
   else
@@ -635,6 +727,19 @@ function mousePressed()
   if (s_wind.isPlaying() == false)
   {
     s_wind.play();
+  }
+}
+
+function titleScreen()
+{
+  textAlign(CENTER,CENTER);
+  textSize(100);
+  text("Shoot Camp", width/2, 150);
+  textSize(50);
+  text("Press SPACE to Continue", width/2, 500);
+  if (keyWentDown("SPACE"))
+  {
+    screen+=1;
   }
 }
 
@@ -693,6 +798,13 @@ function keyPressed()
       currLevel = 17;
       drawLevel(currLevel);
       console.log("18");
+      paused = false;
+    }
+    if (key == 7)
+    {
+      currLevel = 21;
+      drawLevel(currLevel);
+      console.log("22");
       paused = false;
     }
   }
