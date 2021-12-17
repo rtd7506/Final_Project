@@ -58,13 +58,6 @@ class Launcher
                 this.color = color(245,162,79);
                 this.outline = color(getOutline(245,162,79));
                 break;
-            case 7: //Exploding Missles
-                this.aiming = true;
-                this.mtype = 2;
-                break;
-            case 8:
-                this.aiming = true;
-                this.healing = true;
         }
     }
     
@@ -90,6 +83,7 @@ class Launcher
             translate(this.sprite.position.x,this.sprite.position.y)
             rotate(this.sprite.rotation);
             //rotate(this.h);
+            strokeWeight(5);
             fill(this.color);
             stroke(this.outline);
             if (typeof m[this.id] == "object" && stopped == false)

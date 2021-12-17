@@ -45,6 +45,7 @@ class Missile
     {
         if (this.sprite.removed == false)
         {
+            strokeWeight(5);
             fill(this.color);
             stroke(this.outline);
             push()
@@ -147,7 +148,10 @@ class Missile
                         l[i].sprite.remove();
                         l.splice(i, 1);
                         console.log("DIEEEEEE");
-                        //s_explode.play();
+                        if (ghostMode == true)
+                        {
+                          s_explode.play();
+                        }
                         
                     }
                     /* Life System Test
@@ -177,8 +181,10 @@ class Missile
                         this.sprite.remove();
                         m[i].sprite.remove();
                         m.splice(i, 1);
-                        //s_explode.play();
-                        
+                        if (ghostMode == true)
+                        {
+                          s_explode.play();
+                        } 
                     }
                 }
             }
@@ -198,7 +204,10 @@ class Missile
                 health -= 1;
             }
             hurt = true;
-            s_hurt.play();
+            if (ghostMode == true)
+            {
+              s_hurt.play();
+            }
         }
         
         //General Detection
@@ -213,7 +222,10 @@ class Missile
                 }
             }
             m.splice(clear, 1);
-            s_explode.play();
+            if (ghostMode == true)
+            {
+                s_explode.play();
+            }
             //console.log(m);
             //console.log(l);
         }

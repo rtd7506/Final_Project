@@ -149,20 +149,29 @@ let levels =
       [3,200,475,0],
       [4,1000,475,0]
     ],
-    [ //Level 23: Intro to Moving Launchers
+    [ //Level 22: Intro to Moving Launchers
       [5,200,200,90,[200,1000],[200,200]]
     ],
-    [ //Level 24
+    [ //Level 23
       [6,200,575,90,[200,600,1000],[575,100,575]]
     ],
-    [ //Level 25
+    [ //Level 24
       [5,200,200,0,[200,200],[200,475]],
       [5,1000,475,180,[1000,1000],[475,200]]
     ],
-    [ //Level 26
+    [ //Level 25
       [5,950,300,180,[950,1050],[300,300]],
       [5,1050,375,180,[950,1050],[375,375]],
       [6,1100,100,90,[1100,1100,100,100],[100,575,575,100]]
+    ],
+    [ //Level 26: Final
+      [0,300,150,90],
+      [1,600,150,90],
+      [2,900,150,90],
+      [3,300,525,-90],
+      [4,900,525,-90],
+      [5,100,200,0,[100,100],[200,575]],
+      [6,1100,575,180,[1100,1100],[200,575]]
     ]
   ];
 let currLevel = 0;//11;//0;
@@ -173,11 +182,38 @@ let paused = false;
 let storedSpeed = []; //Stores the speeds of missiles while paused
 let storedDir = []; //Stores the directions of missiles while paused
 let currCheckpoint; // Stores the Current Checkpoint Level
-let checkpoints = [0,3,7,10,13,17]; //Stores all checkpoint levels
+let checkpoints = [0,3,7,10,13,17,21,25]; //Stores all checkpoint levels
 let lives = 3;
 let phase = false;
 let e = []; //List of explosions
 screen = 0; //0 is Title Screen, 1 is Tutorial, 2 is Levels, 3 is Final Game Over
+let printSpace = 0;
+let printList = [];
+let mainFont;
+let tutLog = [
+  "Welcome to Shoot Camp recruit!",
+  "Here we will teach you how to fight enemies of all kinds.",
+  "I will be your instructor: Sergeant Circle.",
+  "First, let's discuss movement.",
+  "Use the 'W', 'A', 'S', and 'D' keys to move to the yellow square.",
+  "Great, now we can introduce enemies.",
+  "This is Bob.",
+  "Bob will help us demonstrate common enemy behaviors.",
+  "Enemies shoot Missiles.",
+  "Missiles track and try to home in on you.",
+  "Use your movement to try not to get hit.",
+  "To defeat enemies, you need to send their own missiles back at them.",
+  "Use your tricky movement to redirect Bob's missile back at him.",
+  "Great Job!",
+  "Now you're ready for the field.",
+  "There will be plenty of enemies out there, and they won't all be as nice as Bob.",
+  "But just remember the essentials:",
+  "Move, Dodge, and Destroy!"
+]
+let tutPlace = 0;
+let printList2 = [];
+let tutSquare = false;
+let ghostMode = false;
 
 
 //Sounds
@@ -202,6 +238,7 @@ let hurt_anim;
 let phase_start_anim;
 let hTimer = 0;
 let hurt = false;
+let title;
 
 function preload()
 {
@@ -214,6 +251,8 @@ function preload()
   s_move = loadSound("assets/s_move.wav");
   spritedata = loadJSON('sprites_2.json');
   spritesheet = loadImage('assets/ghost_idle.png');//ghost2_sheet.png');
+  title = loadImage('assets/title.png');
+  mainFont = loadFont('assets/Gunplay.ttf');
 }
 
 
@@ -308,7 +347,7 @@ function drawLevel(level)
     //if (levels[level][i][0] == 0)
     //{
     //m[i] = new Missile(i);
-    //s_shoot.play();
+    
     //}
   }
   s_wind.stop();
@@ -360,9 +399,22 @@ function step()
 
 function draw()
 {
+  if (ghostMode == true)
+  {
+    p.visible = true;
+  }
+  else
+  {
+    p.visible = false;
+  }
+
   if (screen == 0)
   {
     titleScreen();
+  }
+  else if (screen == 1)
+  {
+    tutorialScreen();
   }
   else
   {
@@ -430,14 +482,6 @@ function gameScreen() {
       stopped = false;
       
     }
-  }
-  if (currLevel == 0)
-  {
-    noStroke();
-    fill(0);
-    textAlign(CENTER,CENTER);
-    textSize(30);
-    text("Controls: WASD to Move", width/2,height/2 + 175);
   }
   if (stopped == false)
   {
@@ -537,7 +581,6 @@ function gameScreen() {
   }
   if (l.length > 0) 
   {
-    console.log(l);
     for (let i=0;i<l.length;i++)
     {
       if (l[i].sprite.removed == false)
@@ -548,7 +591,6 @@ function gameScreen() {
           let clear = false;
           for(let j=0;j<m.length;j++)
           {
-            console.log(l);
             if (l[i].sprite.removed == false)
             {
               if (m[j].id == l[i].id)
@@ -558,13 +600,15 @@ function gameScreen() {
               }
             }
           }
-          console.log(l);
           if (l.length>0)
           {
             if (clear == false && l[i].mtype != 2 && l[i].sprite.removed == false)
             {
               m.push(new Missile(l[i].id));
-              s_shoot.play();
+              if (ghostMode == true)
+              {
+                s_shoot.play();
+              }
               console.log("RESUP")
             }      
           }
@@ -589,7 +633,10 @@ function gameScreen() {
   drawSprites();
   fill(58,189,242);
   stroke(getOutline(58,189,242));
-  ellipse(p.position.x, p.position.y, 50, 50);
+  if (ghostMode == false)
+  {
+    ellipse(p.position.x, p.position.y, 50, 50);
+  }
 
   drawHealth();
   
@@ -600,6 +647,7 @@ function gameScreen() {
     //console.log(currLevel);
     if (currLevel > levels.length-1)
     {
+      ghostMode = true;
       currLevel = 0;
     }
     drawLevel(currLevel);
@@ -624,7 +672,10 @@ function gameScreen() {
   }
   if (startTimer == 10)
   {
-    s_start.play();
+    if (ghostMode == true)
+    {
+      s_start.play();
+    }
   }
   if (startTimer == 0)
   {
@@ -705,14 +756,12 @@ function gameScreen() {
     textSize(30);
     text("Press SPACE to resume", width/2, height/2 + 75);
     text("You have "+lives+" Lives", width/2, height/2 + 125);
-    textSize(20);
-    text("Debug: Type '0' to Restart, '1' for Level 1, '2' for Level 4, '3' for Level 8, '4' for Level 11, '5' for Level 14, '6' for Level 17", width/2, height/2 + 300)
+    textSize(15);
+    text("Secret Codes: Type '0' to Restart, '1' for Level 1, '2' for Level 4, '3' for Level 8, '4' for Level 11, '5' for Level 14, '6' for Level 17, '7' for Level 22, '8' for Level 26, 'G' for Ghost Mode", width/2, height/2 + 300)
     stopped = true;
   }
   else
   {
-    console.log(m);
-    console.log(l);
   }
 
   noFill();
@@ -726,26 +775,249 @@ function mousePressed()
   console.log("TEST");
   if (s_wind.isPlaying() == false)
   {
-    s_wind.play();
+    //s_wind.play();
+  }
+  if (screen == 0)
+  {
+    screen += 1;
   }
 }
 
 function titleScreen()
 {
-  textAlign(CENTER,CENTER);
-  textSize(100);
-  text("Shoot Camp", width/2, 150);
-  textSize(50);
-  text("Press SPACE to Continue", width/2, 500);
+  image(title, 0,0);
   if (keyWentDown("SPACE"))
   {
     screen+=1;
+  } 
+}
+
+function tutorialScreen()
+{
+  background(255);
+  //stopped = false;
+
+  //PLAYER MOVEMENT
+  if (stopped == false)
+  {
+  //p Movement
+    if (hurt == false)
+    {
+      p.changeAnimation('idle');
+    }
+    if (keyDown("w")) {
+      //p.velocity.y = -5;
+      p.velocity.y += -1 * ACCELERATION;
+      step();
+    }
+    if (keyDown("s")) {
+      //p.velocity.y = 5;
+      p.velocity.y += ACCELERATION;
+      step();
+
+    }
+    if (keyDown("a")) {
+      //p.velocity.x = -5;
+      p.mirrorX(1);
+      p.velocity.x += -1 * ACCELERATION;
+      step();
+
+    }
+    if (keyDown("d")) {
+      //p.velocity.x = 5;
+      p.mirrorX(-1);
+      p.velocity.x += ACCELERATION;
+      step();
+    }
+    
+
+    if (p.position.y < 17)
+    {
+      p.position.y = 17;
+    }
+    else if ( p.position.y > 450)
+    {
+      p.position.y = 450;
+    }
+    if (p.position.x < 0)
+    {
+      p.position.x = 0;
+    }
+    else if ( p.position.x > width)
+    {
+      p.position.x = width;
+    }
   }
+
+  if (tutSquare)
+  {
+    rectMode(CENTER);
+    strokeWeight(10);
+    fill(235,203,36, 100);//l[this.id].color;
+    stroke(195,163,0,100);//l[this.id].outline;
+    rect(200,height/2,100,100);
+  }
+
+  drawSprites();
+  fill(58,189,242);
+  stroke(getOutline(58,189,242));
+  strokeWeight(5);
+  if (ghostMode == false)
+  {
+    ellipse(p.position.x, p.position.y, 50, 50);
+  }
+
+  rectMode(CENTER);
+  strokeWeight(15);
+  fill(230,230,230);
+  stroke(179,179,179);
+  rect(width/2,550,1000,200);
+  fill(250,250,250);
+  rect(200,550,150,150);
+  fill(69,219,78);
+  stroke(getOutline(69,219,78));
+  ellipse(200,555,110,110);
+  noStroke();
+  fill(0);
+  print(tutLog[tutPlace]);
+
+  if ((keyWentDown("SPACE") && !(tutPlace == 12 || tutPlace == 4)) || (tutSquare && dist(p.position.x,p.position.y,200,height/2) < 100))
+  {
+    
+    printList = [];
+    printList2 = [];
+    printSpace = 0;
+    tutPlace ++;
+    
+    if (tutPlace > tutLog.length-1)
+    {
+      stopped = true;
+      currLevel = -1;
+      screen++;
+      console.log("NEXT");
+    }
+    //console.log(phase);
+    //p.changeAnimation('phase_start');
+  }
+
+  if (tutPlace > 5 && l.length == 0)
+  {
+
+    if (tutPlace < 13)
+    {
+      printList = [];
+      printList2 = [];
+      printSpace = 0;
+      tutPlace = 13;
+    }
+  }
+  if (tutPlace == 0)
+  {
+    textSize(25);
+    text("Press SPACE to advance", 830,610);
+  }
+  if (tutPlace == 3) 
+  {
+    stopped = false;
+  }
+  if (tutPlace == 4) 
+  {
+    tutSquare = true;
+  }
+  if (tutPlace == 5) 
+  {
+    tutSquare = false;
+    l[0] = new Launcher(0, 1000, height / 2, 180, 0);
+  }
+  if (tutPlace > 7) {
+    if (l.length > 0) {
+
+      for (let i = 0; i < l.length; i++) {
+        if (l[i].sprite.removed == false) {
+          l[i].render();
+          if (stopped == false) {
+            let clear = false;
+            for (let j = 0; j < m.length; j++) {
+
+              if (l[i].sprite.removed == false) {
+                if (m[j].id == l[i].id) {
+                  clear = true;
+                  //console.log(l[i].id)
+                }
+              }
+            }
+            if (l.length > 0) {
+              if (clear == false && l[i].mtype != 2 && l[i].sprite.removed == false) {
+                m.push(new Missile(l[i].id));
+                //s_shoot.play();
+                console.log("RESUP")
+              }
+            }
+            if (l[i].moving == true) {
+              l[i].move();
+            }
+          }
+        }
+      }
+    }
+    if (l.length > 0)
+    {
+      m[0].move();
+      m[0].render();
+      //m[0].launched = true;
+      m[0].update();
+      health = 5;
+    }
+    if (e.length>0)
+    {
+      for (let i=0;i<e.length;i++)
+      {
+        e[i].render();
+      }
+    }  
+  }
+
+  if (tutPlace > 5) 
+  {
+    if (l.length > 0)
+    {
+      l[0].render();
+    }
+  }
+  
+
+  
+}
+
+function print(input)
+{
+  if (printSpace<input.length && int(millis()) % 2 == 0)
+  {
+    if (printSpace > 43 || (tutPlace == 7 && printSpace > 41) || (tutPlace == 11 && printSpace > 41) || (tutPlace == 15 && printSpace > 42) || (tutPlace == 12 && printSpace > 42))
+    {
+      printList2.push(input[printSpace]);
+    }
+    else
+    {
+      printList.push(input[printSpace]);
+    }
+    printSpace+=1;
+  }
+  else
+  {
+
+  }
+  textFont(mainFont);
+  textSize(40);
+  textAlign(LEFT,TOP);
+  text(join(printList,""),325,480);
+  text(join(printList2,""),325,525);
+  
 }
 
 function keyPressed()
 {
-  if (paused == true)
+  if (paused == true && screen == 2)
   {
     if (key === "0")
     {
@@ -805,6 +1077,18 @@ function keyPressed()
       currLevel = 21;
       drawLevel(currLevel);
       console.log("22");
+      paused = false;
+    }
+    if (key == 8)
+    {
+      currLevel = 25;
+      drawLevel(currLevel);
+      console.log("26");
+      paused = false;
+    }
+    if (key == 'G')
+    {
+      ghostMode = true;
       paused = false;
     }
   }
